@@ -32,7 +32,6 @@ public class User implements Comparable<User> {
                 moviesSeen++;
             }
         }
-        moviesSeen = moviesSeen/4;
         distance = Math.sqrt(sum/count);
     }
 
