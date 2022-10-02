@@ -1,12 +1,17 @@
 package src;
-//import org.jetbrains.annotations.NotNull;
+import com.sun.jdi.connect.spi.ClosedConnectionException;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.ZoneId;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.PriorityQueue;
+import java.time.LocalTime;
+import java.time.Clock;
+import java.time.Instant;
 
 
 public class Main { 
@@ -22,7 +27,13 @@ public class Main {
         final File testFile = new File("test.txt");
 
         File testPredictions = new File("test-predictions.txt");
+        Clock clock = Clock.system(ZoneId.systemDefault());
+        long initMili = clock.millis();
         knnTest(userMap, testFile);
+        long afterMili = clock.millis();
+        long diffMili = afterMili - initMili;
+        System.out.println("Test Predictions took " + diffMili);
+
     }
 
     public static HashMap<Integer, User> getRatings(){
@@ -136,6 +147,8 @@ public class Main {
         int count = 0;
         try{
             Scanner reader = new Scanner(validationFile);
+            Clock clock = Clock.systemDefaultZone();
+            long initMili = clock.millis();
             while(reader.hasNextLine()){
                 double squaredErr = 0;
                 String line = reader.nextLine();
@@ -143,7 +156,9 @@ public class Main {
                 int movieId = Integer.parseInt(line.split(";")[0]);
                 int userId = Integer.parseInt(line.split(";")[1]);
 
+
                 double knnPrediction = knn(userId, movieId, userMap);
+
                 if(!new File("validation-predictions").isFile()){
                     try{
                         File validationPredictions = new File("validation-predictions.txt");
@@ -156,8 +171,8 @@ public class Main {
                         e.printStackTrace();
                     }
                 }
-                System.out.println("Prediction is " +  knnPrediction);
-                System.out.println("Actual Rating is " + valMovieRating);
+                //System.out.println("Prediction is " +  knnPrediction);
+                //System.out.println("Actual Rating is " + valMovieRating);
                 squaredErr = Math.pow((knnPrediction - valMovieRating), 2);
 
                 if(squaredErr != 0) {
@@ -166,6 +181,9 @@ public class Main {
                 }
             }
             reader.close();
+            long afterMili = clock.millis();
+            long diffMili = afterMili - initMili;
+            System.out.println("Validation Predictions took " + diffMili);
     
         } catch(FileNotFoundException e){
             System.out.println("This file cannot be found");
@@ -184,7 +202,7 @@ public class Main {
                 int userId = Integer.parseInt(line.split(";")[1]);
 
                 double knnPrediction = knn(userId, movieId, userMap);
-                System.out.println("Prediction is " +  knnPrediction);
+                //System.out.println("Prediction is " +  knnPrediction);
                 if(!new File("validation-predictions").isFile()){
                     try{
                         File testPredictions = new File("test-predictions.txt");
