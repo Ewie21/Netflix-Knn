@@ -1,5 +1,5 @@
 package src;
-import org.jetbrains.annotations.NotNull;
+//import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -13,7 +13,7 @@ public class Main {
     public static void main(String[] args){
         final File validationFile = new File("validation.txt");
         System.out.println("RMSE is " + knnValidation(getRatings(), validationFile));
-        //test();
+        test();
 }
 
     public static void test() {
@@ -25,7 +25,7 @@ public class Main {
         knnTest(userMap, testFile);
     }
 
-    public static @NotNull HashMap<Integer, User> getRatings(){
+    public static HashMap<Integer, User> getRatings(){
         final File ratingsFile = new File("ratings.txt");
         HashMap<Integer, User> initUserMap = new HashMap<Integer, User>();
          
@@ -119,13 +119,13 @@ public class Main {
         for(int i = 0; i<k; i++){
             User o = usersQueue.poll();//pulls the user
             if(o != null) {
-                    for(int j = 0; j<pollNum;j++){ //weight
-                        sum += o.getMovies().get(movieId); //gets the rating
-                        n++;
-                    }//weight
-                    if(pollNum!= 1){ //weight
-                        pollNum--; //weight
-                    }
+                for(int j = 0; j<pollNum;j++){ //applies weight
+                    sum += o.getMovies().get(movieId); //gets the rating
+                    n++;
+                }
+                if(pollNum!= 1){
+                    pollNum--; 
+                }     
             }
         }
         return sum/n;
@@ -150,6 +150,8 @@ public class Main {
                         BufferedWriter writer = new BufferedWriter(new FileWriter(validationPredictions,true));
                         String knnPredictionStr = String.valueOf(knnPrediction);
                         writer.append(knnPredictionStr);
+                        writer.append("\n");
+                        writer.close();
                     }catch(IOException e){
                         e.printStackTrace();
                     }
@@ -174,11 +176,9 @@ public class Main {
 
 
     public static void knnTest(HashMap<Integer, User> userMap, File testFile){
-        File testPredictions = new File("test-predictions.txt");
         try{
             Scanner reader = new Scanner(testFile);
             while(reader.hasNextLine()){
-                double squaredErr = 0;
                 String line = reader.nextLine();
                 int movieId = Integer.parseInt(line.split(";")[0]);
                 int userId = Integer.parseInt(line.split(";")[1]);
@@ -187,10 +187,12 @@ public class Main {
                 System.out.println("Prediction is " +  knnPrediction);
                 if(!new File("validation-predictions").isFile()){
                     try{
-                        File validationPredictions = new File("validation-predictions.txt");
-                        BufferedWriter writer = new BufferedWriter(new FileWriter(validationPredictions,true));
+                        File testPredictions = new File("test-predictions.txt");
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(testPredictions,true));
                         String knnPredictionStr = String.valueOf(knnPrediction);
                         writer.append(knnPredictionStr);
+                        writer.append("\n");
+                        writer.close();
                     }catch(IOException e){
                         e.printStackTrace();
                     }
