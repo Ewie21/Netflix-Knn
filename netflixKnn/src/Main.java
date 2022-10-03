@@ -1,40 +1,32 @@
 package src;
-import com.sun.jdi.connect.spi.ClosedConnectionException;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZoneId;
-import java.util.Scanner;
-import java.util.HashMap;
-import java.util.PriorityQueue;
-
+import java.util.*;
 
 public class Main { 
     public static void main(String[] args){
-        final File validationFile = new File("validation.txt");
-        System.out.println("RMSE is " + knnValidation(getRatings(), validationFile));
-        test();
-}
-
-    public static void test() {
         HashMap<Integer, User> userMap = getRatings();
         final File validationFile = new File("validation.txt");
+        System.out.println("RMSE is " + knnValidation(userMap, validationFile));
+        test(userMap);
+}
+
+    public static void test(HashMap<Integer, User> userMap) {
         final File testFile = new File("test.txt");
-
-        File testPredictions = new File("test-predictions.txt");
         Clock clock = Clock.system(ZoneId.systemDefault());
-        long initMili = clock.millis();
-        knnTest(userMap, testFile);
-        long afterMili = clock.millis();
-        long diffMili = afterMili - initMili;
-        System.out.println("Test Predictions took " + diffMili);
+        long initMilli = clock.millis();
 
+        knnTest(userMap, testFile);
+
+        long afterMilli = clock.millis();
+        long diffMilli = afterMilli - initMilli;
+        System.out.println("Test Predictions took " + diffMilli + "milliseconds");
     }
 
     public static HashMap<Integer, User> getRatings(){
         final File ratingsFile = new File("ratings.txt");
-        HashMap<Integer, User> initUserMap = new HashMap<Integer, User>();
+        HashMap<Integer, User> initUserMap = new HashMap<>();
          
         try{
             Scanner reader = new Scanner(ratingsFile);
@@ -59,18 +51,14 @@ public class Main {
             System.out.println("This file cannot be found");
             e.printStackTrace();
         }
-
         return initUserMap;
     }
-    
-
-    
 
     public static double predict(int movieKey, HashMap<Integer, User> userMap){   
         double movieScoreSum = 0.00;
         int n = 0;
-        for (int i: userMap.keySet()){
-            if(userMap.get(i).getMovies().containsKey(movieKey)){
+        for (int i: userMap.keySet()) {
+            if (userMap.get(i).getMovies().containsKey(movieKey)) {
                 //this could be because movieKey is an int while the key is an Integer
                 movieScoreSum += userMap.get(i).getMovies().get(movieKey);
                 n++;
@@ -89,7 +77,6 @@ public class Main {
             while(reader.hasNextLine()){
                 String line = reader.nextLine();
                 int valMovieId = Integer.parseInt(line.split(";")[0]);
-                int valUserId = Integer.parseInt(line.split(";")[1]);
                 int valMovieRating = Integer.parseInt(line.split(";")[2]);
                 
                 double squaredErr = Math.pow((predict(valMovieId, userMap) - valMovieRating),2);
@@ -102,17 +89,16 @@ public class Main {
             System.out.println("This file cannot be found");
             e.printStackTrace();
         }
-        double err = errSum/n;
-        return Math.sqrt(err);
+        return Math.sqrt(errSum/n);
 
     }
 
     public static double knn(int userId, int movieId, HashMap<Integer, User> userMap){
-        PriorityQueue<User> usersQueue = new PriorityQueue<User>();
-        int k = 71;
+        PriorityQueue<User> usersQueue = new PriorityQueue<>();
         User user = userMap.get(userId);
         double sum = 0;
         int n = 0;
+        int k = 71;
         //computes the difference and fills the userQueue
         for(int i: userMap.keySet()){
             if(userMap.get(i).getMovies().containsKey(movieId)){
@@ -122,12 +108,12 @@ public class Main {
             }
         }
         //sum the ratings
-        int pollNum = (int) k/2; //weight
+        int pollNum = k/2; //weight
         for(int i = 0; i<k; i++){
             User o = usersQueue.poll();//pulls the user
             if(o != null) {
                 for(int j = 0; j<pollNum;j++){ //applies weight
-                    sum += o.getMovies().get(movieId); //gets the rating
+                    sum += o.getMovies().get(movieId); //gets and sums the ratings
                     n++;
                 }
                 if(pollNum!= 1){
@@ -144,14 +130,13 @@ public class Main {
         try{
             Scanner reader = new Scanner(validationFile);
             Clock clock = Clock.systemDefaultZone();
-            long initMili = clock.millis();
+            long initMilli = clock.millis();
             while(reader.hasNextLine()){
-                double squaredErr = 0;
+                double squaredErr;
                 String line = reader.nextLine();
                 int valMovieRating = Integer.parseInt(line.split(";")[2]);
                 int movieId = Integer.parseInt(line.split(";")[0]);
                 int userId = Integer.parseInt(line.split(";")[1]);
-
 
                 double knnPrediction = knn(userId, movieId, userMap);
 
@@ -177,9 +162,9 @@ public class Main {
                 }
             }
             reader.close();
-            long afterMili = clock.millis();
-            long diffMili = afterMili - initMili;
-            System.out.println("Validation Predictions took " + diffMili);
+            long afterMilli = clock.millis();
+            long diffMilli = afterMilli - initMilli;
+            System.out.println("Validation Predictions took " + diffMilli);
     
         } catch(FileNotFoundException e){
             System.out.println("This file cannot be found");
@@ -187,7 +172,6 @@ public class Main {
         }
         return Math.sqrt(MSE/count);
     }
-
 
     public static void knnTest(HashMap<Integer, User> userMap, File testFile){
         try{
